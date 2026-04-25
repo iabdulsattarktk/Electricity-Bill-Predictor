@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Electricity Bill Predictor — WAPDA Pakistan</title>
+  <style>
+    /* =========================================================
+       Base & Reset
+    ========================================================= */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0e1a;
+      --surface:   #111827;
+      --card:      #1a2233;
+      --border:    #1e3a5f;
+      --accent:    #00d4ff;
+      --accent2:   #0099cc;
+      --heavy:     #ff6b35;
+      --light-app: #00cc88;
+      --text:      #e2e8f0;
+      --muted:     #6b7280;
+      --error:     #f87171;
+      --success:   #34d399;
+      --radius:    12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+
+    /* =========================================================
+       Typography
+    ========================================================= */
+    h1 {
+      text-align: center;
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      color: var(--accent);
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-bottom: 32px;
+    }
+    h2 {
+      font-size: 1rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+
+    /* =========================================================
+       Layout
+    ========================================================= */
+    .container { max-width: 860px; margin: 0 auto; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+      animation: fadeUp 0.35s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* =========================================================
+       Form elements
+    ========================================================= */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+    label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input, select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 0.93rem;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+    input.invalid, select.invalid { border-color: var(--error); }
+
+    .error-msg {
+      color: var(--error);
+      font-size: 0.75rem;
+      min-height: 16px;
+    }
+
+    /* =========================================================
+       Buttons
+    ========================================================= */
+    .btn {
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 11px 22px;
+      transition: transform 0.12s, opacity 0.2s;
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn-primary { background: var(--accent); color: #0a0e1a; }
+    .btn-primary:hover { opacity: 0.88; }
+    .btn-danger  { background: #7f1d1d; color: #fca5a5; font-size: 0.8rem; padding: 5px 10px; }
+    .btn-danger:hover { background: #991b1b; }
+    .btn-calc {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #0a0e1a;
+      width: 100%;
+      font-size: 1rem;
+      padding: 14px;
+      border-radius: 10px;
+    }
+
+    /* =========================================================
+       Appliance cards list
+    ========================================================= */
+    #appliance-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .app-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: fadeUp 0.25s ease both;
+    }
+    .app-info { flex: 1; }
+    .app-name { font-weight: 600; font-size: 0.95rem; }
+    .app-meta { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-heavy { background: rgba(255,107,53,0.15); color: var(--heavy); }
+    .badge-light { background: rgba(0,204,136,0.12); color: var(--light-app); }
+
+    .empty-msg { color: var(--muted); font-size: 0.88rem; text-align: center; padding: 20px 0; }
+
+    /* =========================================================
+       Results section
+    ========================================================= */
+    #results { display: none; }
+    #results.visible { display: block; }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      text-align: center;
+    }
+    .stat-label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 2rem; font-weight: 700; color: var(--accent); margin-top: 6px; }
+    .stat-unit  { font-size: 0.8rem; color: var(--muted); }
+
+    /* Breakdown table */
+    .breakdown-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .breakdown-table th {
+      background: var(--surface);
+      color: var(--muted);
+      font-weight: 600;
+      text-align: left;
+      padding: 10px 12px;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.5px;
+    }
+    .breakdown-table td {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+    }
+    .breakdown-table tr.top-row td { color: var(--accent); font-weight: 600; }
+    .breakdown-table tr.total-row td {
+      border-top: 2px solid var(--border);
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* Bar chart */
+    .bar-wrap { margin-bottom: 20px; }
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 0.8rem; }
+    .bar-label { width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+    .bar-track { flex: 1; background: var(--surface); border-radius: 999px; height: 10px; overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: 999px; background: var(--accent2); transition: width 0.6s ease; }
+    .bar-fill.top { background: var(--accent); }
+    .bar-pct { width: 42px; text-align: right; color: var(--muted); }
+
+    /* Slab info */
+    .slab-badge {
+      display: inline-block;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    /* Saving tips */
+    .tips-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .tips-list li {
+      background: var(--surface);
+      border-left: 3px solid var(--accent);
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.88rem;
+    }
+
+    /* =========================================================
+       Responsive
+    ========================================================= */
+    @media (max-width: 520px) {
+      .stat-row { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .bar-label { width: 90px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <h1>⚡ Electricity Bill Predictor</h1>
+  <p class="subtitle">WAPDA Pakistan Domestic Tariff — Standalone Web App</p>
+
+  <!-- Owner -->
+  <div class="card">
+    <h2>Consumer Details</h2>
+    <div class="form-group" style="max-width:340px">
+      <label for="ownerName">Owner / Consumer Name</label>
+      <input type="text" id="ownerName" placeholder="e.g. Ali Hassan" maxlength="50" />
+      <span class="error-msg" id="err-owner"></span>
+    </div>
+  </div>
+
+  <!-- Add appliance form -->
+  <div class="card">
+    <h2>Add Appliance</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label for="appName">Appliance Name</label>
+        <input type="text" id="appName" placeholder="e.g. Air Conditioner" maxlength="50" />
+        <span class="error-msg" id="err-name"></span>
+      </div>
+      <div class="form-group">
+        <label for="appWatt">Wattage (W)</label>
+        <input type="number" id="appWatt" placeholder="1 – 10000" min="1" max="10000" />
+        <span class="error-msg" id="err-watt"></span>
+      </div>
+      <div class="form-group">
+        <label for="appHours">Daily Usage (hrs)</label>
+        <input type="number" id="appHours" placeholder="0.1 – 24" min="0.1" max="24" step="0.1" />
+        <span class="error-msg" id="err-hours"></span>
+      </div>
+      <div class="form-group">
+        <label for="appType">Appliance Type</label>
+        <select id="appType">
+          <option value="heavy">Heavy (AC, Fridge, Motor…)</option>
+          <option value="light">Light (Fan, Bulb, TV…)</option>
+        </select>
+        <span class="error-msg" id="err-type"></span>
+      </div>
+    </div>
+    <div style="margin-top:18px">
+      <button class="btn btn-primary" onclick="addAppliance()">+ Add Appliance</button>
+    </div>
+  </div>
+
+  <!-- Appliance list -->
+  <div class="card">
+    <h2>Appliances Added</h2>
+    <div id="appliance-list">
+      <p class="empty-msg" id="empty-msg">No appliances added yet.</p>
+    </div>
+  </div>
+
+  <!-- Calculate -->
+  <div class="card" style="padding:18px">
+    <button class="btn btn-calc" onclick="calculateBill()">Calculate Bill</button>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+
+    <div class="card">
+      <h2>Bill Summary</h2>
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="stat-label">Total Units Consumed</div>
+          <div class="stat-value" id="res-units">0</div>
+          <div class="stat-unit">kWh / month</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Estimated Bill</div>
+          <div class="stat-value" id="res-bill">Rs. 0</div>
+          <div class="stat-unit">Pakistani Rupees</div>
+        </div>
+      </div>
+
+      <div id="res-slab" class="slab-badge"></div>
+
+      <h2 style="margin-top:4px">Consumption Breakdown</h2>
+      <div style="overflow-x:auto">
+        <table class="breakdown-table">
+          <thead>
+            <tr>
+              <th>Appliance</th>
+              <th>Type</th>
+              <th>Units (kWh)</th>
+              <th>% Share</th>
+              <th>Cost (Rs.)</th>
+            </tr>
+          </thead>
+          <tbody id="breakdown-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Consumption Chart</h2>
+      <div class="bar-wrap" id="bar-chart"></div>
+    </div>
+
+    <div class="card">
+      <h2>Energy Saving Tips</h2>
+      <ul class="tips-list" id="tips-list"></ul>
+    </div>
+
+  </div><!-- /results -->
+
+</div><!-- /container -->
+
+<script>
+/* =================================================================
+   DATA MODEL
+================================================================= */
+
+// Array of appliance objects: { name, wattage, hours, type ('heavy'|'light') }
+let appliances = [];
+
+/* =================================================================
+   WAPDA TARIFF LOGIC
+   Identical to the C++ SlabTariff::calculateBill()
+================================================================= */
+
+const SLABS = [
+  { limit: 100,  rate: 5.79  },
+  { limit: 200,  rate: 10.06 },
+  { limit: 300,  rate: 14.84 },
+  { limit: 700,  rate: 19.55 },
+  { limit: Infinity, rate: 26.40 },
+];
+const FIXED_CHARGE = 75;
+
+// Calculate total bill by filling each slab bracket in order
+function calculateWAPDABill(totalUnits) {
+  let bill = FIXED_CHARGE;
+  let remaining = totalUnits;
+  let prevLimit = 0;
+
+  for (const slab of SLABS) {
+    if (remaining <= 0) break;
+    const slabCapacity = slab.limit - prevLimit;
+    const consumed = Math.min(remaining, slabCapacity);
+    bill += consumed * slab.rate;
+    remaining -= consumed;
+    prevLimit = slab.limit;
+  }
+  return bill;
+}
+
+// Return human-readable slab name for totalUnits
+function getSlabName(totalUnits) {
+  if (totalUnits <= 100)  return "Slab 1 — 1-100 units @ Rs. 5.79/kWh";
+  if (totalUnits <= 200)  return "Slab 2 — 101-200 units @ Rs. 10.06/kWh";
+  if (totalUnits <= 300)  return "Slab 3 — 201-300 units @ Rs. 14.84/kWh";
+  if (totalUnits <= 700)  return "Slab 4 — 301-700 units @ Rs. 19.55/kWh";
+  return "Slab 5 — Above 700 units @ Rs. 26.40/kWh";
+}
+
+/* =================================================================
+   UNIT CALCULATION
+   Matches C++ HeavyAppliance and LightAppliance formulas exactly
+================================================================= */
+
+// Calculate monthly kWh for one appliance
+function monthlyUnits(appliance) {
+  const base = (appliance.wattage * appliance.hours * 30) / 1000;
+  // Heavy appliances get the same 1.15x multiplier as the C++ version
+  return appliance.type === 'heavy' ? base * 1.15 : base;
+}
+
+/* =================================================================
+   INPUT VALIDATION
+================================================================= */
+
+function clearErrors() {
+  ['err-owner','err-name','err-watt','err-hours','err-type'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '';
+  });
+  ['ownerName','appName','appWatt','appHours','appType'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('invalid');
+  });
+}
+
+function showError(inputId, errId, msg) {
+  document.getElementById(inputId).classList.add('invalid');
+  document.getElementById(errId).textContent = msg;
+}
+
+// Validate a name string: not empty, not all spaces, max 50 chars, letters/digits/spaces/hyphens
+function validateName(value, inputId, errId, label) {
+  if (!value || !value.trim()) {
+    showError(inputId, errId, `${label} must not be empty.`);
+    return false;
+  }
+  if (value.length > 50) {
+    showError(inputId, errId, `${label} must not exceed 50 characters.`);
+    return false;
+  }
+  if (!/^[a-zA-Z0-9 \-]+$/.test(value)) {
+    showError(inputId, errId, `${label} may only contain letters, digits, spaces, and hyphens.`);
+    return false;
+  }
+  return true;
+}
+
+function validateApplianceForm() {
+  let ok = true;
+  const name  = document.getElementById('appName').value.trim();
+  const watt  = parseFloat(document.getElementById('appWatt').value);
+  const hours = parseFloat(document.getElementById('appHours').value);
+
+  if (!validateName(document.getElementById('appName').value, 'appName', 'err-name', 'Appliance name')) ok = false;
+
+  if (isNaN(watt) || watt < 1 || watt > 10000) {
+    showError('appWatt', 'err-watt', 'Wattage must be a number between 1 and 10000.');
+    ok = false;
+  }
+  if (isNaN(hours) || hours < 0.1 || hours > 24) {
+    showError('appHours', 'err-hours', 'Daily hours must be between 0.1 and 24.');
+    ok = false;
+  }
+  return ok;
+}
+
+/* =================================================================
+   ADD & REMOVE APPLIANCES
+================================================================= */
+
+function addAppliance() {
+  clearErrors();
+  if (!validateApplianceForm()) return;
+
+  const appliance = {
+    name    : document.getElementById('appName').value.trim(),
+    wattage : parseFloat(document.getElementById('appWatt').value),
+    hours   : parseFloat(document.getElementById('appHours').value),
+    type    : document.getElementById('appType').value,
+  };
+
+  appliances.push(appliance);
+
+  // Clear form fields after successful add
+  document.getElementById('appName').value  = '';
+  document.getElementById('appWatt').value  = '';
+  document.getElementById('appHours').value = '';
+
+  renderApplianceList();
+  // Hide results until user recalculates
+  document.getElementById('results').classList.remove('visible');
+}
+
+function removeAppliance(index) {
+  appliances.splice(index, 1);
+  renderApplianceList();
+  document.getElementById('results').classList.remove('visible');
+}
+
+function renderApplianceList() {
+  const container = document.getElementById('appliance-list');
+  const emptyMsg  = document.getElementById('empty-msg');
+
+  if (appliances.length === 0) {
+    container.innerHTML = '';
+    container.appendChild(emptyMsg);
+    emptyMsg.style.display = 'block';
+    return;
+  }
+
+  emptyMsg.style.display = 'none';
+  container.innerHTML = '';
+
+  appliances.forEach((app, i) => {
+    const card = document.createElement('div');
+    card.className = 'app-card';
+    const isHeavy = app.type === 'heavy';
+    card.innerHTML = `
+      <div class="app-info">
+        <div class="app-name">${escHtml(app.name)}</div>
+        <div class="app-meta">${app.wattage} W &nbsp;·&nbsp; ${app.hours} hrs/day &nbsp;·&nbsp;
+          ~${monthlyUnits(app).toFixed(2)} kWh/month</div>
+      </div>
+      <span class="badge ${isHeavy ? 'badge-heavy' : 'badge-light'}">${isHeavy ? 'Heavy' : 'Light'}</span>
+      <button class="btn btn-danger" onclick="removeAppliance(${i})">Remove</button>
+    `;
+    container.appendChild(card);
+  });
+}
+
+/* =================================================================
+   BILL CALCULATION & RESULTS RENDERING
+================================================================= */
+
+function calculateBill() {
+  clearErrors();
+
+  // Validate owner name first
+  const ownerVal = document.getElementById('ownerName').value;
+  if (!validateName(ownerVal, 'ownerName', 'err-owner', 'Owner name')) return;
+
+  if (appliances.length === 0) {
+    alert('Please add at least one appliance before calculating.');
+    return;
+  }
+
+  // Calculate units per appliance
+  const items = appliances.map(app => ({
+    ...app,
+    units: monthlyUnits(app),
+  }));
+
+  const totalUnits = items.reduce((s, a) => s + a.units, 0);
+  const totalBill  = calculateWAPDABill(totalUnits);
+
+  // Find top consumer
+  const topIdx = items.reduce((best, a, i) => a.units > items[best].units ? i : best, 0);
+
+  // Render summary stats
+  document.getElementById('res-units').textContent = totalUnits.toFixed(2);
+  document.getElementById('res-bill').textContent  = 'Rs. ' + totalBill.toFixed(2);
+  document.getElementById('res-slab').textContent  = 'Applicable Slab: ' + getSlabName(totalUnits);
+
+  // Breakdown table
+  const tbody = document.getElementById('breakdown-body');
+  tbody.innerHTML = '';
+
+  items.forEach((app, i) => {
+    const pct  = totalUnits > 0 ? (app.units / totalUnits * 100) : 0;
+    const cost = totalUnits > 0 ? (app.units / totalUnits * totalBill) : 0;
+    const tr = document.createElement('tr');
+    if (i === topIdx) tr.className = 'top-row';
+    tr.innerHTML = `
+      <td>${escHtml(app.name)}${i === topIdx ? ' ★' : ''}</td>
+      <td><span class="badge ${app.type==='heavy'?'badge-heavy':'badge-light'}">${app.type==='heavy'?'Heavy':'Light'}</span></td>
+      <td>${app.units.toFixed(2)}</td>
+      <td>${pct.toFixed(1)}%</td>
+      <td>${cost.toFixed(2)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Total row
+  const trTotal = document.createElement('tr');
+  trTotal.className = 'total-row';
+  trTotal.innerHTML = `
+    <td colspan="2">TOTAL</td>
+    <td>${totalUnits.toFixed(2)}</td>
+    <td>100.0%</td>
+    <td>${totalBill.toFixed(2)}</td>
+  `;
+  tbody.appendChild(trTotal);
+
+  // Bar chart
+  const barChart = document.getElementById('bar-chart');
+  barChart.innerHTML = '';
+  const maxUnits = items[topIdx].units;
+
+  items.forEach((app, i) => {
+    const pct = maxUnits > 0 ? (app.units / maxUnits * 100) : 0;
+    const div = document.createElement('div');
+    div.className = 'bar-row';
+    div.innerHTML = `
+      <div class="bar-label" title="${escHtml(app.name)}">${escHtml(app.name)}</div>
+      <div class="bar-track">
+        <div class="bar-fill ${i === topIdx ? 'top' : ''}" style="width:0%" data-target="${pct.toFixed(1)}"></div>
+      </div>
+      <div class="bar-pct">${(totalUnits>0?(app.units/totalUnits*100):0).toFixed(1)}%</div>
+    `;
+    barChart.appendChild(div);
+  });
+
+  // Animate bars after a short delay
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.bar-fill').forEach(el => {
+      el.style.width = el.dataset.target + '%';
+    });
+  });
+
+  // Saving tips based on top consumer type
+  const tipsList = document.getElementById('tips-list');
+  tipsList.innerHTML = '';
+  const tips = items[topIdx].type === 'heavy'
+    ? [
+        'Set your AC to 26°C — each degree lower adds approximately 6% to consumption.',
+        'Service heavy appliances (AC, fridge) every 6 months for peak efficiency.',
+        'Run heavy loads (washing machine, AC) during off-peak hours (11 PM – 7 AM).',
+      ]
+    : [
+        'Replace incandescent bulbs with LEDs — they use 75% less energy.',
+        'Turn off lights and fans when leaving a room.',
+        'Use natural light during daytime to reduce your lighting load.',
+      ];
+
+  tips.forEach(tip => {
+    const li = document.createElement('li');
+    li.textContent = tip;
+    tipsList.appendChild(li);
+  });
+
+  // Show results section with animation
+  const resultsEl = document.getElementById('results');
+  resultsEl.classList.add('visible');
+  resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* =================================================================
+   UTILITY
+================================================================= */
+
+// Prevent XSS when inserting user-supplied strings into innerHTML
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
