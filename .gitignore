@@ -1,0 +1,9 @@
+# Compiled binaries
+*.exe
+*.o
+
+# Runtime data file (generated when program runs)
+consumers.dat
+
+# Claude Code settings
+.claude/
