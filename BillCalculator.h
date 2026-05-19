@@ -12,7 +12,7 @@ private:
     SlabTariff tariff;    // SlabTariff instance (stateless, so value is fine here)
 
 public:
-    // Constructor takes a House by reference — does not own the House
+    // Constructor takes a House by reference --- does not own the House
     BillCalculator(House& h);
 
     // Print the full bill: per-appliance breakdown, totals, slab, amount due

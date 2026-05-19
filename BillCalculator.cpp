@@ -18,7 +18,7 @@ void BillCalculator::generateBill() const {
 
     std::cout << "\n"
               << "  ============================================================\n"
-              << "          ELECTRICITY BILL — " << house.getOwnerName() << "\n"
+              << "          ELECTRICITY BILL --- " << house.getOwnerName() << "\n"
               << "  ============================================================\n\n";
 
     std::cout << std::fixed << std::setprecision(2);
@@ -61,7 +61,7 @@ void BillCalculator::generateBill() const {
 
     if (top) {
         std::cout << "\n  ** Top Consumer: " << top->getName()
-                  << " — " << top->calculateMonthlyUnits() << " kWh **\n";
+                  << " --- " << top->calculateMonthlyUnits() << " kWh **\n";
     }
 
     std::cout << "  ============================================================\n";
@@ -81,11 +81,11 @@ void BillCalculator::displaySavingTips() const {
 
     // dynamic_cast succeeds only when top actually points to a HeavyAppliance
     if (dynamic_cast<HeavyAppliance*>(top)) {
-        std::cout << "  1. Set your AC to 26 deg C — each degree lower adds ~6% to consumption.\n"
+        std::cout << "  1. Set your AC to 26 deg C --- each degree lower adds ~6% to consumption.\n"
                   << "  2. Service heavy appliances (AC/fridge) every 6 months for peak efficiency.\n"
                   << "  3. Run heavy loads (washing machine, AC) during off-peak hours (11 PM - 7 AM).\n";
     } else {
-        std::cout << "  1. Replace incandescent bulbs with LEDs — they use 75% less energy.\n"
+        std::cout << "  1. Replace incandescent bulbs with LEDs  they use 75% less energy.\n"
                   << "  2. Turn off lights and fans when leaving a room.\n"
                   << "  3. Use natural light during daytime to reduce your lighting load.\n";
     }

@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <string>
 
-// WAPDA domestic tariff rates (Rs. per kWh) — update if WAPDA revises them
+// WAPDA domestic tariff rates (Rs. per kWh) --- update if WAPDA revises them
 const double SlabTariff::RATE_SLAB1   =  5.79;
 const double SlabTariff::RATE_SLAB2   = 10.06;
 const double SlabTariff::RATE_SLAB3   = 14.84;

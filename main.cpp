@@ -81,11 +81,13 @@ std::string readName(const std::string& prompt, const std::string& fieldLabel) {
         }
 
         bool valid = true;
+        bool hasLetter = false;
         for (char c : name) {
             if (!isalpha(c) && !isdigit(c) && c != ' ' && c != '-') {
                 valid = false;
                 break;
             }
+            if (isalpha(c)) hasLetter = true;
         }
 
         if (!valid) {
@@ -94,12 +96,18 @@ std::string readName(const std::string& prompt, const std::string& fieldLabel) {
             continue;
         }
 
+        if (!hasLetter) {
+            std::cout << "  Invalid input. " << fieldLabel
+                      << " must include at least one letter.\n";
+            continue;
+        }
+
         return name;
     }
 }
 
 // ---------------------------------------------------------------
-// File I/O — Save & Load
+// File I/O --- Save & Load
 // ---------------------------------------------------------------
 
 // Save all consumers and their appliances to consumers.dat
@@ -118,7 +126,7 @@ void saveAllConsumers(const std::vector<House*>& houses) {
         // Write consumer header line
         file << "C|" << h->getOwnerName() << "\n";
 
-        // Write each appliance — use dynamic_cast to detect Heavy vs Light
+        // Write each appliance --- use dynamic_cast to detect Heavy vs Light
         for (int i = 0; i < h->getApplianceCount(); i++) {
             Appliance* a = h->getAppliance(i);
             HeavyAppliance* heavy = dynamic_cast<HeavyAppliance*>(a);
@@ -136,7 +144,7 @@ void saveAllConsumers(const std::vector<House*>& houses) {
     }
 
     file.close();
-    std::cout << "\n  Data saved to '" << DATA_FILE << "' — "
+    std::cout << "\n  Data saved to '" << DATA_FILE << "==="
               << houses.size() << " consumer(s) stored.\n";
 }
 
@@ -145,7 +153,7 @@ void saveAllConsumers(const std::vector<House*>& houses) {
 std::vector<House*> loadAllConsumers() {
     std::vector<House*> houses;
     std::ifstream file(DATA_FILE);
-    if (!file.is_open()) return houses; // First run — no file yet
+    if (!file.is_open()) return houses; // First run --- no file yet
 
     House* current = nullptr;
     std::string line;
@@ -205,7 +213,7 @@ std::vector<House*> loadAllConsumers() {
 void printMainMenu(const std::string& ownerName) {
     std::cout << "\n"
               << "  +============================================+\n"
-              << "  |   ELECTRICITY BILL PREDICTOR — WAPDA PK   |\n"
+              << "  |   ELECTRICITY BILL PREDICTOR -- WAPDA PK   |\n"
               << "  +============================================+\n"
               << "  |  Consumer : " << ownerName << "\n"
               << "  +--------------------------------------------+\n"
@@ -232,7 +240,7 @@ void showConsumerList(const std::vector<House*>& houses) {
     for (size_t i = 0; i < houses.size(); i++) {
         std::cout << "  " << (i + 1) << ". "
                   << houses[i]->getOwnerName()
-                  << " — " << houses[i]->getApplianceCount() << " appliance(s)\n";
+                  << " " << houses[i]->getApplianceCount() << " appliance(s)\n";
     }
     std::cout << "  +--------------------------------------------+\n";
 }
@@ -257,7 +265,7 @@ House* selectOrCreateConsumer(std::vector<House*>& allHouses) {
     // Create a brand-new consumer
     std::string ownerName = readName("  Enter new consumer name: ", "Consumer name");
 
-    // Do not add duplicate — reuse if name already exists
+    // Do not add duplicate --- reuse if name already exists
     for (House* h : allHouses) {
         if (h->getOwnerName() == ownerName) {
             std::cout << "  Consumer '" << ownerName << "' already exists. Loading it.\n";
@@ -286,12 +294,12 @@ int main() {
         std::cout << "  " << allHouses.size()
                   << " consumer(s) loaded from '" << DATA_FILE << "'.\n";
     } else {
-        std::cout << "  No saved data found — starting fresh.\n";
+        std::cout << "  No saved data found --- starting fresh.\n";
     }
 
     // Let user pick or create the first consumer to work on
     House* currentHouse = selectOrCreateConsumer(allHouses);
-
+    
     int choice;
     do {
         printMainMenu(currentHouse->getOwnerName());
@@ -303,10 +311,16 @@ int main() {
             // --- Add Appliance ---
             std::string appName = readName("  Enter appliance name: ", "Appliance name");
             double watts = readDouble("  Enter wattage (1 - 10000 W): ", 1.0, 10000.0);
+           
             double hours = readDouble("  Enter daily usage hours (0.1 - 24.0): ", 0.1, 24.0);
-            int type = readInt(
-                "  Appliance type?\n  1. Heavy (AC, fridge, motor)\n  2. Light (fan, bulb, TV)\n  Choice (1-2): ",
-                1, 2);
+            
+            // Automatically determine type based on wattage
+            int type = (watts > 1000) ? 1 : 2;  // 1 = Heavy, 2 = Light
+            if (watts > 1000) {
+                std::cout << "  Appliance type automatically set to: Heavy (wattage > 1000W)\n";
+            } else {
+                std::cout << "  Appliance type automatically set to: Light (wattage <= 1000W)\n";
+            }
 
             if (type == 1) {
                 double peakHrs = readDouble("  Enter peak hours usage (0 - 24.0): ", 0.0, 24.0);

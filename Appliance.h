@@ -26,7 +26,7 @@ public:
     // Pure virtual: every subclass must define how it calculates monthly units
     virtual double calculateMonthlyUnits() const = 0;
 
-    // Virtual display method — subclasses can override for custom output
+    // Virtual display method --- subclasses can override for custom output
     virtual void displayInfo() const;
 };
 

@@ -7,7 +7,7 @@ LightAppliance::LightAppliance(const std::string& name, double watts, double hou
 
 // Monthly units for light appliances:
 // Formula: (wattage in W * hours per day * 30 days) / 1000 = kilowatt-hours
-// No multiplier — light appliances consume close to their rated wattage
+// No multiplier --- light appliances consume close to their rated wattage
 double LightAppliance::calculateMonthlyUnits() const {
     return (getWattage() * getDailyHours() * 30.0) / 1000.0;
 }

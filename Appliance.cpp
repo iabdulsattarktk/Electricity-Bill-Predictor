@@ -10,7 +10,7 @@ std::string Appliance::getName() const { return applianceName; }
 double Appliance::getWattage() const { return wattage; }
 double Appliance::getDailyHours() const { return dailyHours; }
 
-// Default display — subclasses override this for type-specific details
+// Default display --- subclasses override this for type-specific details
 void Appliance::displayInfo() const {
     std::cout << std::fixed << std::setprecision(2);
     std::cout << "  Appliance : " << applianceName << "\n"
